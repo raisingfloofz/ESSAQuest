@@ -1,0 +1,95 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#87522e"><link rel="manifest" href="manifest.webmanifest"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><title>ESSAQUEST — Starter House</title><style>
+*{box-sizing:border-box}body{margin:0;background:#25190f;color:#fff;font-family:system-ui,sans-serif;overflow:hidden}.shell{height:100dvh;display:flex;flex-direction:column;background:#8d552d}.bar{height:62px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 15px;background:linear-gradient(#b47b43,#74421f);border-bottom:5px solid #e3ba72}.bar h1{font-size:clamp(18px,3vw,30px);margin:0;color:#fff0c2;text-shadow:2px 3px #542a16;letter-spacing:1px}.bar button,.bottom button{border:3px solid #e9c58c;border-radius:14px;background:#704522;color:white;font-size:16px;padding:8px 12px;cursor:pointer}.stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#3a6e2b;position:relative}canvas{display:block;max-width:100%;max-height:100%;object-fit:contain;touch-action:none;cursor:crosshair}.bottom{min-height:58px;background:linear-gradient(#a66e38,#69401e);border-top:5px solid #e3ba72;display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 12px}.bottom span{font-size:13px;color:#ffedc5}.modal{position:fixed;inset:0;background:#0009;display:grid;place-items:center;padding:20px}.modal[hidden]{display:none}.panel{max-width:420px;background:#fff0d2;color:#4d321f;border:6px solid #a56d35;border-radius:22px;padding:24px;text-align:center;box-shadow:0 12px 40px #0007}.panel h2{margin-top:0}.panel button{padding:12px 22px;border:0;border-radius:12px;background:#7350a5;color:white;font-weight:700;font-size:18px;cursor:pointer}
+.game{position:relative;width:100vw;height:100dvh;aspect-ratio:auto;margin:0;overflow:hidden;background:#478b2e}.game canvas{width:100%;height:100%;max-width:none;max-height:none;display:block}.hud{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.hot{position:absolute;background:transparent;border:0;cursor:pointer}.home{left:77%;top:84%;width:7%;height:13%}.help{right:5%;top:1%;width:6%;height:7%}.center{left:16%;top:83%;width:7%;height:12%}body{background:#21170e} .map-hot{right:1.7%;bottom:0%;width:13%;height:19%;z-index:5}.map-panel{width:min(96vw,1100px);max-width:none;padding:12px}.map-frame{position:relative;width:100%;}.map-frame img{display:block;width:100%;max-height:72dvh;object-fit:contain}.township-target{position:absolute;left:43.5%;top:36%;width:12%;height:19%;border:0;background:transparent;border-radius:50%;cursor:pointer;color:transparent;font-size:0}.township-target:hover{background:transparent}.township-target:focus-visible{outline:3px solid #ffdf7c;outline-offset:2px}.map-close{margin-top:8px}.settings-hot{left:87.8%;top:0%;width:4.7%;height:9%;z-index:5}.settings-panel{width:min(92vw,430px);max-height:88dvh;overflow:auto;text-align:left}.settings-panel h2{text-align:center}.settings-panel h3{margin:16px 0 6px}.settings-panel p{font-size:14px;line-height:1.4}.settings-actions{display:flex;gap:8px;flex-wrap:wrap}.settings-panel button{font-size:14px;padding:10px 14px}.settings-panel .close-settings{background:#80552d}.settings-panel input[type=file]{display:none}.settings-panel .status{min-height:1.4em;font-size:13px}.settings-panel .danger{color:#a43c22} 
+/* Fullscreen world map: the artwork itself supplies the frame and blue X. */
+.world-map-screen{position:fixed;inset:0;padding:0;margin:0;display:block;background:#25190f;z-index:1000;overflow:hidden}
+.world-map-screen[hidden]{display:none}
+.world-map-screen .map-frame{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;overflow:hidden}
+.world-map-screen .map-frame img{position:absolute;inset:0;width:100%;height:100%;max-height:none;object-fit:fill;display:block;pointer-events:none}
+.world-map-screen .map-statue-hit,.world-map-screen .map-x-hit{position:absolute;z-index:2;display:block;padding:0;margin:0;border:0!important;border-radius:0;background:transparent!important;color:transparent!important;box-shadow:none!important;outline:0;cursor:pointer;font-size:0;appearance:none;-webkit-appearance:none}
+/* MooCow statue at the center of the supplied map artwork. */
+.world-map-screen .map-statue-hit{left:43.6%;top:35.5%;width:11.4%;height:19%}
+/* Blue X is part of world-map.png, at its upper-right corner. */
+.world-map-screen .map-x-hit{right:1.1%;top:0.5%;width:5.6%;height:9.2%}
+.world-map-screen .map-statue-hit:focus-visible,.world-map-screen .map-x-hit:focus-visible{outline:3px solid #fff!important;outline-offset:-3px}
+</style></head><body><div class="game"><canvas id="scene" width="1536" height="921" aria-label="Starter house. Tap the floor or fenced yard to walk."></canvas><img class="hud" src="interface-clean.png" alt="ESSAQUEST game controls"><button class="hot map-hot" id="mapButton" aria-label="Open world map"></button><button class="hot settings-hot" id="settingsButton" aria-label="Open settings"></button><button class="hot home" id="home" aria-label="Home"></button><button class="hot help" id="help" aria-label="Help"></button><button class="hot center" id="center" aria-label="Reset position"></button></div><div class="modal world-map-screen" id="mapModal" hidden><div class="map-frame" role="dialog" aria-modal="true" aria-label="ESSAQuest World Map"><img src="world-map.png" alt="ESSAQuest world map"><button class="map-statue-hit" id="townshipTarget" aria-label="Travel to Handlessa Township" title="Handlessa Township"></button><button class="map-x-hit" id="closeMap" aria-label="Close world map" title="Close map"></button></div></div><div class="modal" id="settingsModal" hidden><div class="panel settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><h2 id="settingsTitle">Settings</h2><h3>Display</h3><div class="settings-actions"><button id="fullscreen">Enter fullscreen</button></div><h3>Backup &amp; Restore</h3><p>Download a backup of your saved ESSAQuest data on this device, or restore a previously saved backup.</p><div class="settings-actions"><button id="backup">Download backup</button><button id="restore">Restore backup</button><input id="restoreFile" type="file" accept=".json,application/json"></div><p class="danger">Restoring replaces your existing ESSAQuest save data on this device.</p><p class="status" id="settingsStatus" role="status"></p><div class="settings-actions"><button class="close-settings" id="closeSettings">Close</button></div></div></div><div class="modal" id="welcome"><div class="panel"><h2>Welcome home!</h2><p>This is your free Starter House. Its floral walls and wooden flooring are permanent. Furniture will come later.</p><p>Tap anywhere inside the fenced yard or house to move Vanilla. Pinch with two fingers to zoom and pan. On desktop, use the mouse wheel to zoom.</p><button id="start">Enter house</button></div></div><script>
+const c=document.querySelector('#scene'),ctx=c.getContext('2d');const bg=new Image();bg.src='starter-house.png';const townshipBg=new Image();townshipBg.src='handlessa-township.png';let currentPlace='house';try{currentPlace=localStorage.getItem('essaquest-place')==='township'?'township':'house'}catch{}const WORLD_W=1536,WORLD_H=921;let coverScale=1,coverX=0,coverY=0;function resizeScene(){const r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*devicePixelRatio));c.height=Math.max(1,Math.round(r.height*devicePixelRatio));coverScale=Math.max(c.width/WORLD_W,c.height/WORLD_H);coverX=(c.width-WORLD_W*coverScale)/2;coverY=(c.height-WORLD_H*coverScale)/2}window.addEventListener('resize',resizeScene);resizeScene();const brisket=new Image();brisket.src='brisket.png';let brisketReady=false;brisket.onload=()=>brisketReady=true;brisket.onerror=()=>brisketReady=false;
+// Editable walkable floor polygon, based on the screenshot. Furniture collision will be added later.
+// The whole fenced property is walkable, including the grass outside the floor.
+// These conservative bounds keep the character inside the image; refine the
+// fence collision polygon later when the yard artwork is finalized.
+const floor=[[95,130],[1440,130],[1440,855],[95,855]];
+function inside(p){let ok=false;for(let i=0,j=floor.length-1;i<floor.length;j=i++){const a=floor[i],b=floor[j];if((a[1]>p.y)!==(b[1]>p.y)&&p.x<(b[0]-a[0])*(p.y-a[1])/(b[1]-a[1])+a[0])ok=!ok;}return ok}
+function nearest(p){if(inside(p))return p;let best=null,d=Infinity;for(let i=0;i<floor.length;i++){let a=floor[i],b=floor[(i+1)%floor.length],dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((p.x-a[0])*dx+(p.y-a[1])*dy)/(dx*dx+dy*dy)));let q={x:a[0]+dx*t,y:a[1]+dy*t},dd=(p.x-q.x)**2+(p.y-q.y)**2;if(dd<d){best=q;d=dd}}let center={x:670,y:522};return {x:best.x+(center.x-best.x)*.018,y:best.y+(center.y-best.y)*.018}}
+let zoom=1,camX=0,camY=0;const MIN_ZOOM=1,MAX_ZOOM=2.8;function clampCamera(){camX=Math.max(WORLD_W*(1-zoom),Math.min(0,camX));camY=Math.max(WORLD_H*(1-zoom),Math.min(0,camY))}function zoomAt(z,x,y){const next=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,z));const ratio=next/zoom;camX=x-(x-camX)*ratio;camY=y-(y-camY)*ratio;zoom=next;clampCamera()}function coords(e){const r=c.getBoundingClientRect();return {x:((e.clientX-r.left)*c.width/r.width-coverX)/coverScale,y:((e.clientY-r.top)*c.height/r.height-coverY)/coverScale}}let saved;try{saved=JSON.parse(localStorage.getItem('essaquest-starter-position'))}catch{}let pos=saved&&inside(saved)?saved:{x:680,y:568};let target={...pos};let last=0;let walking=false;
+function drawFallback(x,y,t){let s=.75+(y/921)*.45;ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle='#0004';ctx.beginPath();ctx.ellipse(0,3,28,10,0,0,Math.PI*2);ctx.fill();ctx.translate(0,walking?Math.sin(t/110)*2:0);ctx.fillStyle='#f6f4ed';ctx.strokeStyle='#55483c';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(0,-30,25,30,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#777';for(let k of [-1,1]){ctx.beginPath();ctx.ellipse(k*27,-45,13,9,k*.25,0,Math.PI*2);ctx.fill()}ctx.fillStyle='#e6b6b4';ctx.beginPath();ctx.ellipse(0,-20,19,13,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#302b2c';for(let k of [-1,1]){ctx.beginPath();ctx.arc(k*10,-39,3.5,0,Math.PI*2);ctx.fill()}ctx.restore()}
+// Brisket is anchored by the bottom-center of the transparent PNG (feet at the clicked point).
+// Adjust CHARACTER_HEIGHT to resize Brisket without changing the background.
+const CHARACTER_HEIGHT=105;
+function drawCharacter(x,y,t){
+  if(!brisketReady || !brisket.naturalWidth){drawFallback(x,y,t);return;}
+  const depth=.72+(y/921)*.48;
+  const h=CHARACTER_HEIGHT*depth;
+  const w=h*(brisket.naturalWidth/brisket.naturalHeight);
+  const bob=walking?Math.sin(t/115)*2:0;
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.ellipse(x,y+2,Math.min(26,w*.25),7,0,0,Math.PI*2);ctx.fill();
+  ctx.drawImage(brisket,x-w/2,y-h+bob,w,h);
+  ctx.restore();
+}
+function render(t){let dt=Math.min(50,t-(last||t))/1000;last=t;let dx=target.x-pos.x,dy=target.y-pos.y,dist=Math.hypot(dx,dy);walking=dist>1;if(walking){let step=Math.min(dist,225*dt);pos.x+=dx/dist*step;pos.y+=dy/dist*step;if(step===dist){try{localStorage.setItem('essaquest-starter-position',JSON.stringify(pos))}catch{}}}ctx.clearRect(0,0,c.width,c.height);ctx.save();ctx.setTransform(coverScale*zoom,0,0,coverScale*zoom,coverX+coverScale*camX,coverY+coverScale*camY);const activeBg=currentPlace==='township'?townshipBg:bg;if(activeBg.complete&&activeBg.naturalWidth)ctx.drawImage(activeBg,0,0,WORLD_W,WORLD_H);else{ctx.fillStyle='#487c36';ctx.fillRect(0,0,WORLD_W,WORLD_H)}drawCharacter(pos.x,pos.y,t);ctx.restore();requestAnimationFrame(render)}requestAnimationFrame(render);
+const pointers=new Map();let gesture=null,ignoreTap=false;
+function worldAt(s){return {x:(s.x-camX)/zoom,y:(s.y-camY)/zoom}}
+function pinch(){const pts=[...pointers.values()];if(pts.length<2)return;const a=pts[0],b=pts[1];const center={x:(a.x+b.x)/2,y:(a.y+b.y)/2};const dist=Math.hypot(a.x-b.x,a.y-b.y);if(gesture){const anchor=gesture.anchor;zoom=Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,gesture.zoom*dist/gesture.distance));camX=center.x-anchor.x*zoom;camY=center.y-anchor.y*zoom;clampCamera()}else{gesture={distance:dist,zoom,anchor:worldAt(center)}}}
+c.addEventListener('pointerdown',e=>{if(!document.querySelector('#welcome').hidden||!settingsModal.hidden||!mapModal.hidden)return;e.preventDefault();c.setPointerCapture(e.pointerId);pointers.set(e.pointerId,coords(e));if(pointers.size>=2){ignoreTap=true;gesture=null;pinch()}});
+c.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,coords(e));if(pointers.size>=2){ignoreTap=true;pinch()}});
+function endPointer(e){if(!pointers.has(e.pointerId))return;const screen=coords(e);if(pointers.size===1&&!ignoreTap&&document.querySelector('#welcome').hidden&&settingsModal.hidden&&mapModal.hidden){target=nearest(worldAt(screen))}pointers.delete(e.pointerId);if(pointers.size<2){gesture=null;if(pointers.size===0)ignoreTap=false}};
+c.addEventListener('pointerup',endPointer);c.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);gesture=null;if(!pointers.size)ignoreTap=false});
+c.addEventListener('wheel',e=>{e.preventDefault();const s=coords(e);zoomAt(zoom*(e.deltaY<0?1.12:.89),s.x,s.y)},{passive:false});
+const fullButton=document.querySelector('#fullscreen');
+async function toggleFullscreen(){
+ try{
+  if(document.fullscreenElement){await document.exitFullscreen();return}
+  if(document.documentElement.requestFullscreen){
+   await document.documentElement.requestFullscreen({navigationUI:'hide'});
+   try{await screen.orientation.lock('landscape')}catch(_){}
+  }else{alert('Your browser does not support fullscreen here. Open ESSAQUEST in Chrome and choose Add to Home screen, then launch it from your home screen.');}
+ }catch(_){alert('Fullscreen was blocked by this browser. Open in Chrome and use Add to Home screen for the best experience.');}
+}
+fullButton.onclick=toggleFullscreen;
+document.addEventListener('fullscreenchange',()=>{fullButton.textContent=document.fullscreenElement?'Exit fullscreen':'Enter fullscreen'});
+const mapModal=document.querySelector('#mapModal');document.querySelector('#mapButton').onclick=()=>mapModal.hidden=false;document.querySelector('#closeMap').onclick=()=>mapModal.hidden=true;mapModal.addEventListener('click',e=>{if(e.target===mapModal)mapModal.hidden=true});document.querySelector('#townshipTarget').onclick=()=>{currentPlace='township';try{localStorage.setItem('essaquest-place',currentPlace)}catch{};pos={x:770,y:640};target={...pos};zoom=1;camX=camY=0;mapModal.hidden=true};const settingsModal=document.querySelector('#settingsModal');
+const settingsStatus=document.querySelector('#settingsStatus');
+document.querySelector('#settingsButton').onclick=()=>{settingsStatus.textContent='';settingsModal.hidden=false};
+document.querySelector('#closeSettings').onclick=()=>settingsModal.hidden=true;
+settingsModal.addEventListener('click',e=>{if(e.target===settingsModal)settingsModal.hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){settingsModal.hidden=true;mapModal.hidden=true}});
+const savePrefix='essaquest-';
+document.querySelector('#backup').onclick=()=>{
+ try{
+  localStorage.setItem('essaquest-starter-position',JSON.stringify(pos));
+  const data={format:'ESSAQUEST-save',version:1,createdAt:new Date().toISOString(),storage:{}};
+  for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key&&key.startsWith(savePrefix))data.storage[key]=localStorage.getItem(key)}
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ESSAQUEST-backup.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  settingsStatus.textContent='Backup downloaded.';
+ }catch(e){settingsStatus.textContent='Could not download backup: '+e.message}
+};
+document.querySelector('#restore').onclick=()=>document.querySelector('#restoreFile').click();
+document.querySelector('#restoreFile').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{
+  const data=JSON.parse(await file.text());
+  if(data.format!=='ESSAQUEST-save'||data.version!==1||!data.storage||typeof data.storage!=='object'||Array.isArray(data.storage))throw Error('This is not a supported ESSAQuest backup.');
+  const entries=Object.entries(data.storage);
+  if(entries.some(([k,v])=>!k.startsWith(savePrefix)||typeof v!=='string'))throw Error('Backup contains invalid save data.');
+  if(!confirm('Restore this backup? Your current ESSAQuest progress on this device will be replaced.'))return;
+  const keys=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k?.startsWith(savePrefix))keys.push(k)}
+  keys.forEach(k=>localStorage.removeItem(k));entries.forEach(([k,v])=>localStorage.setItem(k,v));
+  const restored=JSON.parse(localStorage.getItem('essaquest-starter-position')||'null');
+  if(restored&&inside(restored)){pos={...restored};target={...restored}}
+  settingsStatus.textContent='Backup restored successfully.';
+ }catch(err){settingsStatus.textContent='Restore failed: '+err.message}finally{e.target.value=''}
+});
+document.querySelector('#start').onclick=()=>document.querySelector('#welcome').hidden=true;document.querySelector('#home').onclick=()=>{currentPlace='house';try{localStorage.setItem('essaquest-place','house')}catch{};pos={x:680,y:568};target={...pos};zoom=1;camX=camY=0;document.querySelector('#welcome').hidden=false};document.querySelector('#help').onclick=()=>alert('Tap/click anywhere inside the fenced yard or house to walk. Pinch with two fingers to zoom and pan, or use your mouse wheel. Vanilla is controlled by tapping or clicking the yard or floor. Position saves on this device. Place a transparent image named brisket.png next to index.html to display Vanilla. Furniture comes later.');document.querySelector('#center').onclick=()=>{target=currentPlace==='township'?{x:770,y:640}:{x:680,y:568};zoom=1;camX=0;camY=0;try{localStorage.removeItem('essaquest-starter-position')}catch{}};
+</script></body></html>
